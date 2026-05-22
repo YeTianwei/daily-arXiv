@@ -2348,6 +2348,26 @@ header {
   letter-spacing: 0;
 }
 
+.logo-image {
+  display: none;
+}
+
+.site-logo::before {
+  content: "A";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--primary-color);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 750;
+  font-family: Georgia, "Times New Roman", serif;
+  box-shadow: var(--shadow-sm);
+}
+
 .icon-button:hover,
 .view-controls .button:hover,
 .view-controls .button.active {
@@ -2377,6 +2397,18 @@ header {
 
 .category-button.active .category-count {
   background-color: rgba(255, 255, 255, 0.18);
+}
+
+.back-to-top,
+.back-to-top:hover,
+.back-to-top:active {
+  color: #ffffff !important;
+}
+
+.back-to-top svg,
+.back-to-top svg path {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 .paper-card {

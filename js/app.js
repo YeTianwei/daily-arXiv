@@ -389,6 +389,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+window.addEventListener('pageshow', (event) => {
+  if (!event.persisted) return;
+
+  const previousKeywords = JSON.stringify(userKeywords);
+  const previousAuthors = JSON.stringify(userAuthors);
+
+  loadUserKeywords();
+  loadUserAuthors();
+
+  if (
+    JSON.stringify(userKeywords) !== previousKeywords ||
+    JSON.stringify(userAuthors) !== previousAuthors
+  ) {
+    renderPapers();
+  }
+});
+
 async function fetchGitHubStats() {
   try {
     const response = await fetch('https://api.github.com/repos/YeTianwei/daily-arXiv');

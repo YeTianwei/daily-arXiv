@@ -707,15 +707,15 @@ async function fetchAvailableDates() {
     const text = await response.text();
     const files = text.trim().split('\n');
 
-    const dateRegex = /(\d{4}-\d{2}-\d{2})_AI_enhanced_(English|Chinese)\.jsonl/;
+    const dateRegex = /(\d{4}-\d{2}-\d{2})_AI_enhanced_(English|Chinese)?\.jsonl/;
     const dateLanguageMap = new Map(); // Store date -> available languages
     const dates = [];
     
     files.forEach(file => {
       const match = file.match(dateRegex);
-      if (match && match[1] && match[2]) {
+      if (match && match[1]) {
         const date = match[1];
-        const language = match[2];
+        const language = match[2] || '';
         
         if (!dateLanguageMap.has(date)) {
           dateLanguageMap.set(date, []);

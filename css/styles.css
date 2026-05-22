@@ -175,9 +175,9 @@ header {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: static;
+  transform: none;
+  margin-right: auto;
 }
 
 .site-logo {
@@ -2353,19 +2353,31 @@ header {
 }
 
 .site-logo::before {
-  content: "A";
+  content: "";
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 34px;
   height: 34px;
-  border-radius: 9px;
-  background: var(--primary-color);
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 750;
-  font-family: Georgia, "Times New Roman", serif;
+  border-radius: 7px;
+  background:
+    linear-gradient(135deg, transparent 0 13px, #c7ddd6 13px 17px, transparent 17px) top right / 18px 18px no-repeat,
+    linear-gradient(#ffffff, #ffffff) padding-box;
+  border: 2px solid var(--primary-color);
+  position: relative;
   box-shadow: var(--shadow-sm);
+}
+
+.site-logo::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 14px;
+  width: 17px;
+  height: 2px;
+  background: var(--primary-color);
+  border-radius: 2px;
+  box-shadow:
+    0 7px 0 rgba(15, 118, 110, 0.7),
+    0 14px 0 rgba(15, 118, 110, 0.38);
 }
 
 .icon-button:hover,

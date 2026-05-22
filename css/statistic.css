@@ -1006,3 +1006,28 @@ input:checked + .toggle-slider:before {
     opacity: 1;
   }
 } 
+
+/* Personal reading theme overrides */
+.total-papers,
+.close-sidebar,
+.paper-link,
+.sidebar-header h3 {
+  color: var(--primary-color) !important;
+}
+
+.paper-index,
+.keyword-count,
+.date-range-toggle.active,
+.paper-card-index {
+  background: var(--primary-color) !important;
+}
+
+.paper-card-summary {
+  border-left-color: var(--primary-color) !important;
+}
+
+.keyword-tag {
+  background: #f2f6f4 !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}

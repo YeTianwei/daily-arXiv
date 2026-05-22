@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', checkScreenSize);
 
   initEventListeners();
-  fetchGitHubStats();
   
   fetchAvailableDates().then(() => {
     if (availableDates.length > 0) {

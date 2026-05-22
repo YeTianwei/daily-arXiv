@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   initSettings();
   initEventListeners();
-  fetchGitHubStats();
 });
 
 // 初始化设置，从localStorage加载已保存的设置

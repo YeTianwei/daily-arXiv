@@ -370,8 +370,6 @@ function matchPapersByKeywordsOrAuthor(papers, keywords, author) {
 document.addEventListener('DOMContentLoaded', () => {
   initEventListeners();
 
-  fetchGitHubStats();
-
   // 加载用户关键词
   loadUserKeywords();
 

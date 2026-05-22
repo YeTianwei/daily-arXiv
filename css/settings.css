@@ -391,3 +391,25 @@
     width: 100%;
   }
 } 
+
+/* Personal reading theme overrides */
+.selected-tags .category-tag {
+  background: #f2f6f4 !important;
+  border-color: var(--border-color) !important;
+  color: var(--primary-color) !important;
+}
+
+.settings-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.16) !important;
+}
+
+.add-tag-button,
+.settings-actions button {
+  background: var(--primary-color) !important;
+}
+
+.add-tag-button:hover,
+.settings-actions button:hover {
+  background: #115e59 !important;
+}

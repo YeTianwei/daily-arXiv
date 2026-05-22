@@ -27,6 +27,14 @@ if os.path.exists('.env'):
 template = open("template.txt", "r").read()
 system = open("system.txt", "r").read()
 
+DEFAULT_AI_FIELDS = {
+    "tldr": "Summary generation failed",
+    "motivation": "Motivation analysis unavailable",
+    "method": "Method extraction failed",
+    "result": "Result analysis unavailable",
+    "conclusion": "Conclusion extraction failed"
+}
+
 def parse_args():
     """解析命令行参数"""
     parser = argparse.ArgumentParser()
@@ -115,15 +123,6 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
         item.update(code_info)
 
     """处理单个数据项"""
-    # Default structure with meaningful fallback values
-    default_ai_fields = {
-        "tldr": "Summary generation failed",
-        "motivation": "Motivation analysis unavailable",
-        "method": "Method extraction failed",
-        "result": "Result analysis unavailable",
-        "conclusion": "Conclusion extraction failed"
-    }
-    
     try:
         response: Structure = chain.invoke({
             "language": language,
@@ -147,17 +146,17 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
                 print(f"Failed to parse JSON for {item.get('id', 'unknown')}: {json_e}", file=sys.stderr)
         
         # Merge partial data with defaults to ensure all fields exist
-        item['AI'] = {**default_ai_fields, **partial_data}
+        item['AI'] = {**DEFAULT_AI_FIELDS, **partial_data}
         print(f"Using partial AI data for {item.get('id', 'unknown')}: {list(partial_data.keys())}", file=sys.stderr)
     except Exception as e:
         # Catch any other exceptions and provide default values
         print(f"Unexpected error for {item.get('id', 'unknown')}: {e}", file=sys.stderr)
-        item['AI'] = default_ai_fields
+        item['AI'] = DEFAULT_AI_FIELDS.copy()
     
     # Final validation to ensure all required fields exist
-    for field in default_ai_fields.keys():
+    for field in DEFAULT_AI_FIELDS.keys():
         if field not in item['AI']:
-            item['AI'][field] = default_ai_fields[field]
+            item['AI'][field] = DEFAULT_AI_FIELDS[field]
 
     # 检查 AI 生成的所有字段
     for v in item.get("AI", {}).values():
@@ -167,7 +166,12 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
 
 def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int) -> List[Dict]:
     """并行处理所有数据项"""
-    llm = ChatOpenAI(model=model_name).with_structured_output(Structure, method="function_calling")
+    base_url = os.environ.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_API_BASE")
+    llm_kwargs = {"model": model_name}
+    if base_url:
+        llm_kwargs["base_url"] = base_url
+
+    llm = ChatOpenAI(**llm_kwargs).with_structured_output(Structure, method="function_calling")
     print('Connect to:', model_name, file=sys.stderr)
     
     prompt_template = ChatPromptTemplate.from_messages([
@@ -200,20 +204,29 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
                 print(f"Item at index {idx} generated an exception: {e}", file=sys.stderr)
                 # Add default AI fields to ensure consistency
                 processed_data[idx] = data[idx]
-                processed_data[idx]['AI'] = {
-                    "tldr": "Processing failed",
-                    "motivation": "Processing failed",
-                    "method": "Processing failed",
-                    "result": "Processing failed",
-                    "conclusion": "Processing failed"
-                }
+                processed_data[idx]['AI'] = DEFAULT_AI_FIELDS.copy()
     
     return processed_data
 
+def is_default_ai_failure(item: Dict) -> bool:
+    return bool(item and item.get("AI", {}).get("tldr") == DEFAULT_AI_FIELDS["tldr"])
+
 def main():
     args = parse_args()
-    model_name = os.environ.get("MODEL_NAME", 'deepseek-chat')
-    language = os.environ.get("LANGUAGE", 'Chinese')
+    model_name = (os.environ.get("MODEL_NAME") or 'deepseek-v4-pro').strip()
+    language = (os.environ.get("LANGUAGE") or 'Chinese').strip()
+    api_key = os.environ.get("OPENAI_API_KEY")
+    base_url = os.environ.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_API_BASE")
+
+    print(f"Model: {model_name}", file=sys.stderr)
+    print(f"Language: {language}", file=sys.stderr)
+    print(f"OPENAI_API_KEY configured: {bool(api_key)}", file=sys.stderr)
+    print(f"OPENAI_BASE_URL configured: {bool(base_url)}", file=sys.stderr)
+
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY is not configured")
+    if model_name.startswith("deepseek") and not base_url:
+        raise RuntimeError("OPENAI_BASE_URL is required for DeepSeek models")
 
     # 检查并删除目标文件
     target_file = args.data.replace('.jsonl', f'_AI_enhanced_{language}.jsonl')
@@ -245,6 +258,12 @@ def main():
         language,
         args.max_workers
     )
+    failed_count = sum(1 for item in processed_data if is_default_ai_failure(item))
+    total_count = sum(1 for item in processed_data if item is not None)
+    print(f"AI failures: {failed_count}/{total_count}", file=sys.stderr)
+
+    if total_count > 0 and failed_count == total_count:
+        raise RuntimeError("All AI enhancement requests failed; refusing to write fallback-only data")
     
     # 保存结果
     with open(target_file, "w") as f:

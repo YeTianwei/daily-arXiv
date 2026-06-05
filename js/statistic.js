@@ -742,6 +742,8 @@ function parseJsonlData(jsonlText, date) {
         authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors,
         category: allCategories,
         summary: summary,
+        affiliations: normalizeAffiliations(paper.affiliations),
+        authorAffiliations: Array.isArray(paper.author_affiliations) ? paper.author_affiliations : [],
         details: paper.summary || '',
         date: date,
         id: paper.id,
@@ -756,6 +758,25 @@ function parseJsonlData(jsonlText, date) {
   });
   
   return result;
+}
+
+function normalizeAffiliations(affiliations) {
+  if (!affiliations) {
+    return [];
+  }
+
+  const affiliationList = Array.isArray(affiliations) ? affiliations : [affiliations];
+  const seen = new Set();
+
+  return affiliationList
+    .map(affiliation => String(affiliation).replace(/\s+/g, ' ').trim())
+    .filter(affiliation => {
+      if (!affiliation || seen.has(affiliation)) {
+        return false;
+      }
+      seen.add(affiliation);
+      return true;
+    });
 }
 
 function formatDate(dateString) {

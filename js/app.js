@@ -938,6 +938,8 @@ function parseJsonlData(jsonlText, date) {
         authors: Array.isArray(paper.authors) ? paper.authors.join(', ') : paper.authors,
         category: allCategories,
         summary: summary,
+        affiliations: normalizeAffiliations(paper.affiliations),
+        authorAffiliations: Array.isArray(paper.author_affiliations) ? paper.author_affiliations : [],
         details: paper.summary || '',
         date: date,
         id: paper.id,
@@ -955,6 +957,40 @@ function parseJsonlData(jsonlText, date) {
   });
   
   return result;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeAffiliations(affiliations) {
+  if (!affiliations) {
+    return [];
+  }
+
+  const affiliationList = Array.isArray(affiliations) ? affiliations : [affiliations];
+  const seen = new Set();
+
+  return affiliationList
+    .map(affiliation => String(affiliation).replace(/\s+/g, ' ').trim())
+    .filter(affiliation => {
+      if (!affiliation || seen.has(affiliation)) {
+        return false;
+      }
+      seen.add(affiliation);
+      return true;
+    });
+}
+
+function formatAffiliations(affiliations) {
+  return normalizeAffiliations(affiliations)
+    .map(affiliation => escapeHtml(affiliation))
+    .join('; ');
 }
 
 // 获取所有类别并按偏好排序
@@ -1480,6 +1516,10 @@ function showPaperDetails(paper, paperIndex) {
   const highlightedAuthors = modalAuthorTerms.length > 0 
     ? highlightMatches(paper.authors, modalAuthorTerms, 'author-highlight') 
     : paper.authors;
+  const affiliationDisplay = formatAffiliations(paper.affiliations);
+  const affiliationRow = affiliationDisplay
+    ? `<p><strong>Affiliations: </strong>${affiliationDisplay}</p>`
+    : '';
   
   // 高亮摘要（关键词 + 文本搜索）
   const highlightedSummary = modalTitleTerms.length > 0 
@@ -1517,6 +1557,7 @@ function showPaperDetails(paper, paperIndex) {
   const modalContent = `
     <div class="paper-details ${matchedPaperClass}">
       <p><strong>Authors: </strong>${highlightedAuthors}</p>
+      ${affiliationRow}
       <p><strong>Categories: </strong>${categoryDisplay}</p>
       <p><strong>Date: </strong>${formatDate(paper.date)}</p>
       

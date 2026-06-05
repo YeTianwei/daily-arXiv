@@ -354,6 +354,10 @@
   color: var(--text-color);
 }
 
+#resetSettings {
+  color: #ffffff;
+}
+
 .settings-actions button:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -407,9 +411,11 @@
 .add-tag-button,
 .settings-actions button {
   background: var(--primary-color) !important;
+  color: #ffffff !important;
 }
 
 .add-tag-button:hover,
 .settings-actions button:hover {
   background: #1d4ed8 !important;
+  color: #ffffff !important;
 }

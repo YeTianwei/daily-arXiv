@@ -1,21 +1,21 @@
 /* 基础样式 */
 :root {
-  --primary-color: #0f766e;
-  --secondary-color: #2563eb;
-  --accent-color: #b45309;
-  --gradient-primary: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
-  --gradient-light: linear-gradient(135deg, #dff5ef 0%, #e9f1ff 100%);
-  --background-color: #f7f8f5;
+  --primary-color: #2563eb;
+  --secondary-color: #0ea5e9;
+  --accent-color: #0369a1;
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
+  --gradient-light: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%);
+  --background-color: #f8fafc;
   --card-bg-color: #ffffff;
-  --background-hover: #eef3f0;
-  --text-color: #102a2a;
-  --text-secondary: #46605d;
-  --text-tertiary: #7e918d;
-  --border-color: #dbe6e2;
-  --border-accent: rgba(15, 118, 110, 0.22);
-  --shadow-sm: 0 1px 3px rgba(15, 45, 42, 0.08);
-  --shadow-md: 0 8px 22px rgba(15, 45, 42, 0.11);
-  --shadow-lg: 0 16px 36px rgba(15, 45, 42, 0.14);
+  --background-hover: #eff6ff;
+  --text-color: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #8291a6;
+  --border-color: #dbeafe;
+  --border-accent: rgba(37, 99, 235, 0.22);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 22px rgba(15, 23, 42, 0.11);
+  --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.14);
   --radius-sm: 8px;
   --radius-md: 12px;
   --transition: all 0.2s ease;
@@ -23,10 +23,10 @@
   --gold-color: #f59e0b;
   --gold-dark: #b45309;
   --gold-gradient: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
-  --author-color: #10b981;
-  --author-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --author-color: #0ea5e9;
+  --author-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
   --keyword-color: #2563eb;
-  --keyword-gradient: linear-gradient(135deg, #2563eb 0%, #0f766e 100%);
+  --keyword-gradient: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
 }
 
 * {
@@ -857,23 +857,34 @@ main {
 }
 
 .paper-modal-footer .button.icon-button:not(.primary) {
-  color: var(--text-primary);
+  color: var(--primary-color);
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
 }
 
 .paper-modal-footer .button.icon-button:not(.primary):hover {
-  color: var(--primary-color);
+  color: #1d4ed8;
+  background-color: #dbeafe;
   transform: translateY(-1px);
 }
 
 /* Special styling for arXiv logo */
+.paper-modal-footer #paperLink {
+  color: #0369a1;
+  background: #e0f2fe !important;
+  border: 1px solid #bae6fd;
+}
+
 .paper-modal-footer #paperLink svg {
   width: 60px;
   height: 27px;
   margin: -2px -10px;
 }
 
-.paper-modal-footer .button.icon-button.primary {
-  background: none;
+.paper-modal-footer #paperLink:hover {
+  color: #075985;
+  background: #bae6fd !important;
+  border-color: #7dd3fc;
 }
 
 .paper-modal-footer .button.icon-button.primary:hover {
@@ -2333,7 +2344,7 @@ footer {
 }
 
 header {
-  background-color: rgba(250, 252, 249, 0.88);
+  background-color: rgba(248, 250, 252, 0.9);
 }
 
 .site-title,
@@ -2359,7 +2370,7 @@ header {
   height: 34px;
   border-radius: 7px;
   background:
-    linear-gradient(135deg, transparent 0 13px, #c7ddd6 13px 17px, transparent 17px) top right / 18px 18px no-repeat,
+    linear-gradient(135deg, transparent 0 13px, #bfdbfe 13px 17px, transparent 17px) top right / 18px 18px no-repeat,
     linear-gradient(#ffffff, #ffffff) padding-box;
   border: 2px solid var(--primary-color);
   position: relative;
@@ -2376,14 +2387,14 @@ header {
   background: var(--primary-color);
   border-radius: 2px;
   box-shadow:
-    0 7px 0 rgba(15, 118, 110, 0.7),
-    0 14px 0 rgba(15, 118, 110, 0.38);
+    0 7px 0 rgba(37, 99, 235, 0.7),
+    0 14px 0 rgba(37, 99, 235, 0.38);
 }
 
 .icon-button:hover,
 .view-controls .button:hover,
 .view-controls .button.active {
-  background-color: rgba(15, 118, 110, 0.1);
+  background-color: rgba(37, 99, 235, 0.1);
 }
 
 .category-nav-label,
@@ -2402,9 +2413,8 @@ header {
 }
 
 .category-button.active:hover,
-.paper-modal-footer .button.icon-button.primary:hover,
 .back-to-top:hover {
-  background: #115e59 !important;
+  background: #1d4ed8 !important;
 }
 
 .category-button.active .category-count {
@@ -2429,17 +2439,17 @@ header {
 }
 
 .paper-card:hover {
-  border-color: rgba(15, 118, 110, 0.3);
+  border-color: rgba(37, 99, 235, 0.3);
   box-shadow: var(--shadow-md);
 }
 
 .paper-card-summary {
-  background-color: #f4f7f5;
+  background-color: #f8fbff;
   border-left-color: var(--primary-color);
 }
 
 .category-tag {
-  background-color: #f2f6f4;
+  background-color: #f8fbff;
   border-color: var(--border-color);
 }
 
@@ -2455,5 +2465,5 @@ header {
 .add-tag-button:hover,
 .copy-btn:hover,
 .save-btn:hover {
-  background: #115e59 !important;
+  background: #1d4ed8 !important;
 }

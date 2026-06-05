@@ -1027,20 +1027,20 @@ input:checked + .toggle-slider:before {
 }
 
 .keyword-tag {
-  background: #f2f6f4 !important;
+  background: #f8fbff !important;
   border-color: var(--border-color) !important;
   color: var(--text-color) !important;
 }
 
 .keyword-item {
-  background: #f3f7f5 !important;
+  background: #f8fbff !important;
   border: 1px solid var(--border-color) !important;
   box-shadow: var(--shadow-sm) !important;
 }
 
 .keyword-item:hover {
-  background: #e9f3ef !important;
-  border-color: rgba(15, 118, 110, 0.28) !important;
+  background: #eff6ff !important;
+  border-color: rgba(37, 99, 235, 0.28) !important;
 }
 
 .keyword-rank {
@@ -1049,6 +1049,6 @@ input:checked + .toggle-slider:before {
 }
 
 .keyword-count {
-  background: #dcebe6 !important;
+  background: #dbeafe !important;
   color: var(--primary-color) !important;
 }

@@ -2,6 +2,7 @@ import os
 import json
 import sys
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 from queue import Queue
@@ -40,9 +41,34 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, required=True, help="jsonline data file")
     parser.add_argument("--max_workers", type=int, default=1, help="Maximum number of parallel workers")
+    parser.add_argument("--max_retries", type=int, default=2, help="Maximum AI retries per item")
     return parser.parse_args()
 
-def process_single_item(chain, item: Dict, language: str) -> Dict:
+def is_retryable_error(error: Exception) -> bool:
+    message = str(error).lower()
+    non_retryable_markers = (
+        "not supported model",
+        "invalid api key",
+        "authentication",
+        "permission denied",
+        "param incorrect",
+    )
+    return not any(marker in message for marker in non_retryable_markers)
+
+def parse_partial_ai_data(error: Exception) -> Dict:
+    error_msg = str(error)
+    if "Function Structure arguments:" not in error_msg:
+        return {}
+
+    try:
+        json_str = error_msg.split("Function Structure arguments:", 1)[1].strip().split('are not valid JSON')[0].strip()
+        json_str = json_str.replace('\\', '\\\\')
+        return json.loads(json_str)
+    except Exception as json_e:
+        print(f"Failed to parse partial AI JSON: {json_e}", file=sys.stderr)
+        return {}
+
+def process_single_item(chain, item: Dict, language: str, max_retries: int) -> Dict:
     def is_sensitive(content: str) -> bool:
         """
         调用 spam.dw-dengwei.workers.dev 接口检测内容是否包含敏感词。
@@ -123,35 +149,34 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
         item.update(code_info)
 
     """处理单个数据项"""
-    try:
-        response: Structure = chain.invoke({
-            "language": language,
-            "content": item['summary']
-        })
-        item['AI'] = response.model_dump()
-    except langchain_core.exceptions.OutputParserException as e:
-        # 尝试从错误信息中提取 JSON 字符串并修复
-        error_msg = str(e)
-        partial_data = {}
-        
-        if "Function Structure arguments:" in error_msg:
-            try:
-                # 提取 JSON 字符串
-                json_str = error_msg.split("Function Structure arguments:", 1)[1].strip().split('are not valid JSON')[0].strip()
-                # 预处理 LaTeX 数学符号 - 使用四个反斜杠来确保正确转义
-                json_str = json_str.replace('\\', '\\\\')
-                # 尝试解析修复后的 JSON
-                partial_data = json.loads(json_str)
-            except Exception as json_e:
-                print(f"Failed to parse JSON for {item.get('id', 'unknown')}: {json_e}", file=sys.stderr)
-        
-        # Merge partial data with defaults to ensure all fields exist
-        item['AI'] = {**DEFAULT_AI_FIELDS, **partial_data}
-        print(f"Using partial AI data for {item.get('id', 'unknown')}: {list(partial_data.keys())}", file=sys.stderr)
-    except Exception as e:
-        # Catch any other exceptions and provide default values
-        print(f"Unexpected error for {item.get('id', 'unknown')}: {e}", file=sys.stderr)
-        item['AI'] = DEFAULT_AI_FIELDS.copy()
+    for attempt in range(max_retries + 1):
+        try:
+            response: Structure = chain.invoke({
+                "language": language,
+                "content": item['summary']
+            })
+            item['AI'] = response.model_dump()
+            break
+        except langchain_core.exceptions.OutputParserException as e:
+            partial_data = parse_partial_ai_data(e)
+            if partial_data:
+                item['AI'] = {**DEFAULT_AI_FIELDS, **partial_data}
+                print(f"Using partial AI data for {item.get('id', 'unknown')}: {list(partial_data.keys())}", file=sys.stderr)
+                break
+            if attempt < max_retries:
+                print(f"Retrying AI parsing for {item.get('id', 'unknown')} ({attempt + 1}/{max_retries})", file=sys.stderr)
+                time.sleep(2 ** attempt)
+                continue
+            print(f"AI parsing failed for {item.get('id', 'unknown')}: {e}", file=sys.stderr)
+            item['AI'] = DEFAULT_AI_FIELDS.copy()
+        except Exception as e:
+            if attempt < max_retries and is_retryable_error(e):
+                print(f"Retrying AI request for {item.get('id', 'unknown')} ({attempt + 1}/{max_retries}): {e}", file=sys.stderr)
+                time.sleep(2 ** attempt)
+                continue
+            print(f"Unexpected error for {item.get('id', 'unknown')}: {e}", file=sys.stderr)
+            item['AI'] = DEFAULT_AI_FIELDS.copy()
+        break
     
     # Final validation to ensure all required fields exist
     for field in DEFAULT_AI_FIELDS.keys():
@@ -164,7 +189,7 @@ def process_single_item(chain, item: Dict, language: str) -> Dict:
             return None
     return item
 
-def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int) -> List[Dict]:
+def process_all_items(data: List[Dict], model_name: str, language: str, max_workers: int, max_retries: int) -> List[Dict]:
     """并行处理所有数据项"""
     base_url = os.environ.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_API_BASE")
     llm_kwargs = {"model": model_name}
@@ -186,7 +211,7 @@ def process_all_items(data: List[Dict], model_name: str, language: str, max_work
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # 提交所有任务
         future_to_idx = {
-            executor.submit(process_single_item, chain, item, language): idx
+            executor.submit(process_single_item, chain, item, language, max_retries): idx
             for idx, item in enumerate(data)
         }
         
@@ -213,7 +238,7 @@ def is_default_ai_failure(item: Dict) -> bool:
 
 def main():
     args = parse_args()
-    model_name = (os.environ.get("MODEL_NAME") or 'deepseek-v4-pro').strip()
+    model_name = (os.environ.get("MODEL_NAME") or 'mimo-v2.5-pro').strip()
     language = (os.environ.get("LANGUAGE") or 'Chinese').strip()
     api_key = os.environ.get("OPENAI_API_KEY")
     base_url = os.environ.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_API_BASE")
@@ -256,7 +281,8 @@ def main():
         data,
         model_name,
         language,
-        args.max_workers
+        args.max_workers,
+        args.max_retries
     )
     failed_count = sum(1 for item in processed_data if is_default_ai_failure(item))
     total_count = sum(1 for item in processed_data if item is not None)

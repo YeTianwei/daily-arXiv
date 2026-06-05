@@ -47,7 +47,7 @@ jobs:
         export MODEL_NAME="${{ vars.MODEL_NAME }}"
         export LANGUAGE="${LANGUAGE:-Chinese}"
         export CATEGORIES="${CATEGORIES:-cs.RO, cs.CV}"
-        export MODEL_NAME="${MODEL_NAME:-deepseek-v4-pro}"
+        export MODEL_NAME="${MODEL_NAME:-mimo-v2.5-pro}"
         
         # 使用Scrapy爬取
         # Use Scrapy to crawl
@@ -115,7 +115,7 @@ jobs:
         export LANGUAGE="${{ vars.LANGUAGE }}"
         export MODEL_NAME="${{ vars.MODEL_NAME }}"
         export LANGUAGE="${LANGUAGE:-Chinese}"
-        export MODEL_NAME="${MODEL_NAME:-deepseek-v4-pro}"
+        export MODEL_NAME="${MODEL_NAME:-mimo-v2.5-pro}"
         
         python enhance.py --data ../data/${today}.jsonl
         

@@ -25,7 +25,7 @@ Repository variables:
 
 - `CATEGORIES`, for example `cs.RO, cs.CV`
 - `LANGUAGE`, for example `Chinese` or `English`
-- `MODEL_NAME`, for example `deepseek-v4-pro`
+- `MODEL_NAME`, for example `mimo-v2.5-pro`
 - `EMAIL`, used for workflow git commits
 - `NAME`, used for workflow git commits
 
@@ -91,5 +91,5 @@ export OPENAI_API_KEY="your-api-key"
 export OPENAI_BASE_URL="https://api.deepseek.com"
 export LANGUAGE="Chinese"
 export CATEGORIES="cs.RO, cs.CV"
-export MODEL_NAME="deepseek-v4-pro"
+export MODEL_NAME="mimo-v2.5-pro"
 ```

@@ -62,124 +62,128 @@ function loadUserAuthors() {
   renderFilterTags();
 }
 
-// 渲染过滤标签（作者和关键词）
+// 渲染兴趣筛选面板（作者和关键词）
 function renderFilterTags() {
-  const filterTagsElement = document.getElementById('filterTags');
   const filterContainer = document.querySelector('.filter-label-container');
-  const filterActions = document.getElementById('filterActions');
+  const filterPicker = document.getElementById('filterPicker');
+  const authorOptions = document.getElementById('filterAuthorOptions');
+  const topicOptions = document.getElementById('filterTopicOptions');
   const hasFilters = (userAuthors && userAuthors.length > 0) || (userKeywords && userKeywords.length > 0);
-  
-  // 如果没有作者和关键词，仅隐藏标签区域，保留容器（以显示搜索按钮）
+
+  // 如果没有作者和关键词，仅隐藏兴趣选择器，保留文本搜索。
   if (!hasFilters) {
     filterContainer.style.display = 'flex';
-    if (filterActions) {
-      filterActions.style.display = 'none';
-    }
-    if (filterTagsElement) {
-      filterTagsElement.style.display = 'none';
-      filterTagsElement.innerHTML = '';
+    if (filterPicker) {
+      filterPicker.style.display = 'none';
     }
     return;
   }
   
   filterContainer.style.display = 'flex';
-  if (filterTagsElement) {
-    filterTagsElement.style.display = 'flex';
-  }
-  if (filterActions) {
-    filterActions.style.display = 'inline-flex';
-  }
-  filterTagsElement.innerHTML = '';
-  
-  // 先添加作者标签
-  if (userAuthors && userAuthors.length > 0) {
-    userAuthors.forEach(author => {
-      const tagGroup = document.createElement('div');
-      tagGroup.className = 'filter-tag-group';
+  filterPicker.style.display = 'block';
+  authorOptions.innerHTML = '';
+  topicOptions.innerHTML = '';
 
-      const tagElement = document.createElement('button');
-      tagElement.type = 'button';
-      tagElement.className = `category-button author-button ${activeAuthors.includes(author) ? 'active' : ''}`;
-      tagElement.textContent = author;
-      tagElement.dataset.author = author;
-      tagElement.title = 'Click to toggle this author';
-      tagElement.setAttribute('aria-pressed', activeAuthors.includes(author));
-      
-      tagElement.addEventListener('click', () => {
-        toggleAuthorFilter(author);
-      });
-      
-      tagGroup.append(tagElement, createOnlyFilterButton(author, 'author'));
-      filterTagsElement.appendChild(tagGroup);
-      
-      // 添加出现动画后移除动画类
-      if (!activeAuthors.includes(author)) {
-        tagElement.classList.add('tag-appear');
-        setTimeout(() => {
-          tagElement.classList.remove('tag-appear');
-        }, 300);
-      }
-    });
-  }
-  
-  // 再添加关键词标签
-  if (userKeywords && userKeywords.length > 0) {
-    userKeywords.forEach(keyword => {
-      const tagGroup = document.createElement('div');
-      tagGroup.className = 'filter-tag-group';
+  userAuthors.forEach(author => {
+    authorOptions.appendChild(createFilterOption(author, 'author', activeAuthors.includes(author)));
+  });
 
-      const tagElement = document.createElement('button');
-      tagElement.type = 'button';
-      tagElement.className = `category-button keyword-button ${activeKeywords.includes(keyword) ? 'active' : ''}`;
-      tagElement.textContent = keyword;
-      tagElement.dataset.keyword = keyword;
-      tagElement.title = 'Click to toggle this topic';
-      tagElement.setAttribute('aria-pressed', activeKeywords.includes(keyword));
-      
-      tagElement.addEventListener('click', () => {
-        toggleKeywordFilter(keyword);
-      });
-      
-      tagGroup.append(tagElement, createOnlyFilterButton(keyword, 'topic'));
-      filterTagsElement.appendChild(tagGroup);
-      
-      // 添加出现动画后移除动画类
-      if (!activeKeywords.includes(keyword)) {
-        tagElement.classList.add('tag-appear');
-        setTimeout(() => {
-          tagElement.classList.remove('tag-appear');
-        }, 300);
-      }
-    });
-  }
+  userKeywords.forEach(keyword => {
+    topicOptions.appendChild(createFilterOption(keyword, 'topic', activeKeywords.includes(keyword)));
+  });
 
   updateFilterActionStates();
+  filterVisibleOptions();
 }
 
-function createOnlyFilterButton(value, type) {
+function createFilterOption(value, type, isActive) {
+  const option = document.createElement('div');
+  option.className = 'filter-option';
+  option.dataset.filterValue = value.toLowerCase();
+
+  const toggleButton = document.createElement('button');
+  toggleButton.type = 'button';
+  toggleButton.className = `filter-option-toggle ${isActive ? 'active' : ''}`;
+  toggleButton.setAttribute('aria-pressed', isActive);
+  toggleButton.dataset[type === 'author' ? 'author' : 'keyword'] = value;
+  toggleButton.innerHTML = `
+    <span class="filter-option-check" aria-hidden="true">${isActive ? '✓' : ''}</span>
+    <span class="filter-option-name"></span>
+  `;
+  toggleButton.querySelector('.filter-option-name').textContent = value;
+  toggleButton.addEventListener('click', () => {
+    if (type === 'author') {
+      toggleAuthorFilter(value);
+    } else {
+      toggleKeywordFilter(value);
+    }
+  });
+
   const onlyButton = document.createElement('button');
   onlyButton.type = 'button';
-  onlyButton.className = 'filter-only-button';
+  onlyButton.className = 'filter-option-only';
   onlyButton.textContent = 'Only';
   onlyButton.title = `Only select ${value}`;
   onlyButton.setAttribute('aria-label', `Only select ${value}`);
   onlyButton.addEventListener('click', () => {
     selectOnlyFilter(value, type);
   });
-  return onlyButton;
+
+  option.append(toggleButton, onlyButton);
+  return option;
+}
+
+function filterVisibleOptions() {
+  const searchInput = document.getElementById('filterOptionSearch');
+  const searchClear = document.getElementById('filterOptionSearchClear');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+  const options = document.querySelectorAll('.filter-option');
+
+  options.forEach(option => {
+    option.hidden = query.length > 0 && !option.dataset.filterValue.includes(query);
+  });
+
+  ['Authors', 'Topics'].forEach(group => {
+    const section = document.getElementById(`filter${group}Section`);
+    const hasVisibleOptions = [...section.querySelectorAll('.filter-option')].some(option => !option.hidden);
+    section.hidden = !hasVisibleOptions;
+  });
+
+  const emptyMessage = document.getElementById('filterOptionsEmpty');
+  emptyMessage.style.display = [...options].some(option => !option.hidden) ? 'none' : 'block';
+  if (searchClear) {
+    searchClear.style.visibility = query.length > 0 ? 'visible' : 'hidden';
+  }
 }
 
 function updateFilterActionStates() {
   const selectAllButton = document.getElementById('selectAllFilters');
   const clearButton = document.getElementById('clearFilters');
+  const summaryText = document.getElementById('filterSummaryText');
+  const summaryButton = document.getElementById('filterSummaryButton');
   const totalFilterCount = userAuthors.length + userKeywords.length;
   const activeFilterCount = activeAuthors.length + activeKeywords.length;
+  const activeFilters = [...activeAuthors, ...activeKeywords];
 
   if (selectAllButton) {
     selectAllButton.disabled = totalFilterCount === 0 || activeFilterCount === totalFilterCount;
   }
   if (clearButton) {
     clearButton.disabled = activeFilterCount === 0;
+  }
+  if (summaryText) {
+    if (activeFilterCount === totalFilterCount) {
+      summaryText.textContent = `Interests: All ${totalFilterCount}`;
+    } else if (activeFilterCount === 0) {
+      summaryText.textContent = 'Interests: None';
+    } else if (activeFilterCount === 1) {
+      summaryText.textContent = `Interests: ${activeFilters[0]}`;
+    } else {
+      summaryText.textContent = `Interests: ${activeFilters[0]} +${activeFilterCount - 1}`;
+    }
+  }
+  if (summaryButton) {
+    summaryButton.title = activeFilterCount > 0 ? activeFilters.join(', ') : 'No interests selected';
   }
 }
 
@@ -206,6 +210,15 @@ function selectOnlyFilter(value, type) {
   }
 }
 
+function closeFilterPanel() {
+  const panel = document.getElementById('filterPanel');
+  const summaryButton = document.getElementById('filterSummaryButton');
+  if (!panel || !summaryButton) return;
+
+  panel.classList.remove('open');
+  summaryButton.setAttribute('aria-expanded', 'false');
+}
+
 // 切换关键词过滤
 function toggleKeywordFilter(keyword) {
   const index = activeKeywords.indexOf(keyword);
@@ -218,29 +231,7 @@ function toggleKeywordFilter(keyword) {
     activeKeywords.splice(index, 1);
   }
   
-  // 更新关键词标签UI
-  const keywordTags = document.querySelectorAll('[data-keyword]');
-  keywordTags.forEach(tag => {
-    if (tag.dataset.keyword === keyword) {
-      // 先移除上一次可能的高亮动画
-      tag.classList.remove('tag-highlight');
-      
-      // 添加/移除激活状态
-      tag.classList.toggle('active', activeKeywords.includes(keyword));
-      tag.setAttribute('aria-pressed', activeKeywords.includes(keyword));
-      
-      // 添加高亮动画
-      setTimeout(() => {
-        tag.classList.add('tag-highlight');
-      }, 10);
-      
-      // 移除高亮动画
-      setTimeout(() => {
-        tag.classList.remove('tag-highlight');
-      }, 1000);
-    }
-  });
-  updateFilterActionStates();
+  renderFilterTags();
   
   // 重新渲染论文列表
   renderPapers();
@@ -259,29 +250,7 @@ function toggleAuthorFilter(author) {
     activeAuthors.splice(index, 1);
   }
   
-  // 更新作者标签UI
-  const authorTags = document.querySelectorAll('[data-author]');
-  authorTags.forEach(tag => {
-    if (tag.dataset.author === author) {
-      // 先移除上一次可能的高亮动画
-      tag.classList.remove('tag-highlight');
-      
-      // 添加/移除激活状态
-      tag.classList.toggle('active', activeAuthors.includes(author));
-      tag.setAttribute('aria-pressed', activeAuthors.includes(author));
-      
-      // 添加高亮动画
-      setTimeout(() => {
-        tag.classList.add('tag-highlight');
-      }, 10);
-      
-      // 移除高亮动画
-      setTimeout(() => {
-        tag.classList.remove('tag-highlight');
-      }, 1000);
-    }
-  });
-  updateFilterActionStates();
+  renderFilterTags();
   
   // 重新渲染论文列表
   renderPapers();
@@ -503,6 +472,7 @@ function initEventListeners() {
   const calendarButton = document.getElementById('calendarButton');
   calendarButton.addEventListener('click', (e) => {
     e.stopPropagation();
+    closeFilterPanel();
     toggleDatePicker();
   });
   
@@ -558,9 +528,13 @@ function initEventListeners() {
     if (event.key === 'Escape') {
       const paperModal = document.getElementById('paperModal');
       const datePickerModal = document.getElementById('datePickerModal');
+      const filterPanel = document.getElementById('filterPanel');
       
+      if (filterPanel.classList.contains('open')) {
+        closeFilterPanel();
+      }
       // 关闭论文模态框
-      if (paperModal.classList.contains('active')) {
+      else if (paperModal.classList.contains('active')) {
         closeModal();
       }
       // 关闭日期选择器模态框
@@ -668,6 +642,11 @@ function initEventListeners() {
   const searchClear = document.getElementById('textSearchClear');
   const selectAllFiltersButton = document.getElementById('selectAllFilters');
   const clearFiltersButton = document.getElementById('clearFilters');
+  const filterPicker = document.getElementById('filterPicker');
+  const filterSummaryButton = document.getElementById('filterSummaryButton');
+  const filterPanel = document.getElementById('filterPanel');
+  const filterOptionSearch = document.getElementById('filterOptionSearch');
+  const filterOptionSearchClear = document.getElementById('filterOptionSearchClear');
 
   if (selectAllFiltersButton) {
     selectAllFiltersButton.addEventListener('click', selectAllFilters);
@@ -675,10 +654,37 @@ function initEventListeners() {
   if (clearFiltersButton) {
     clearFiltersButton.addEventListener('click', clearFilters);
   }
+  if (filterSummaryButton && filterPanel) {
+    filterSummaryButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const isOpen = filterPanel.classList.toggle('open');
+      filterSummaryButton.setAttribute('aria-expanded', isOpen);
+      if (isOpen) {
+        filterOptionSearch.focus();
+      }
+    });
+  }
+  if (filterPicker) {
+    filterPicker.addEventListener('click', event => {
+      event.stopPropagation();
+    });
+  }
+  document.addEventListener('click', closeFilterPanel);
+  if (filterOptionSearch) {
+    filterOptionSearch.addEventListener('input', filterVisibleOptions);
+  }
+  if (filterOptionSearchClear) {
+    filterOptionSearchClear.addEventListener('click', () => {
+      filterOptionSearch.value = '';
+      filterVisibleOptions();
+      filterOptionSearch.focus();
+    });
+  }
 
   if (searchToggle && searchWrapper && searchInput && searchClear) {
     searchToggle.addEventListener('click', (e) => {
       e.stopPropagation();
+      closeFilterPanel();
       searchWrapper.style.display = 'flex';
       searchInput.focus();
     });

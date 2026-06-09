@@ -146,13 +146,34 @@
                             <button id="textSearchClear" class="clear-x" title="Clear" style="display: none;">×</button>
                         </div>
                     </div>
-                    <div class="filter-actions" id="filterActions" aria-label="Filter selection actions">
-                        <button id="selectAllFilters" class="filter-action-button" type="button">Select all</button>
-                        <span class="filter-action-separator" aria-hidden="true">|</span>
-                        <button id="clearFilters" class="filter-action-button" type="button">Clear</button>
-                    </div>
-                    <div class="filter-scroll" id="filterTags">
-                        <!-- Authors and Keywords will be dynamically added here -->
+                    <div class="filter-picker" id="filterPicker">
+                        <button id="filterSummaryButton" class="filter-summary-button" type="button" aria-expanded="false" aria-controls="filterPanel">
+                            <span id="filterSummaryText">Interests: None</span>
+                            <svg class="filter-summary-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <div class="filter-panel" id="filterPanel" role="dialog" aria-label="Select interests">
+                            <div class="filter-panel-search">
+                                <input id="filterOptionSearch" type="search" placeholder="Search authors or topics..." aria-label="Search authors or topics">
+                                <button id="filterOptionSearchClear" class="filter-panel-search-clear" type="button" title="Clear search">×</button>
+                            </div>
+                            <div class="filter-panel-actions">
+                                <button id="selectAllFilters" class="filter-action-button" type="button">Select all</button>
+                                <button id="clearFilters" class="filter-action-button" type="button">Clear</button>
+                            </div>
+                            <div class="filter-panel-options">
+                                <section id="filterAuthorsSection" class="filter-option-section">
+                                    <h3>Authors</h3>
+                                    <div id="filterAuthorOptions"></div>
+                                </section>
+                                <section id="filterTopicsSection" class="filter-option-section">
+                                    <h3>Topics</h3>
+                                    <div id="filterTopicOptions"></div>
+                                </section>
+                                <p id="filterOptionsEmpty" class="filter-options-empty">No matching interests.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

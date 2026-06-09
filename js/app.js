@@ -66,10 +66,15 @@ function loadUserAuthors() {
 function renderFilterTags() {
   const filterTagsElement = document.getElementById('filterTags');
   const filterContainer = document.querySelector('.filter-label-container');
+  const filterActions = document.getElementById('filterActions');
+  const hasFilters = (userAuthors && userAuthors.length > 0) || (userKeywords && userKeywords.length > 0);
   
   // 如果没有作者和关键词，仅隐藏标签区域，保留容器（以显示搜索按钮）
-  if ((!userAuthors || userAuthors.length === 0) && (!userKeywords || userKeywords.length === 0)) {
+  if (!hasFilters) {
     filterContainer.style.display = 'flex';
+    if (filterActions) {
+      filterActions.style.display = 'none';
+    }
     if (filterTagsElement) {
       filterTagsElement.style.display = 'none';
       filterTagsElement.innerHTML = '';
@@ -81,22 +86,31 @@ function renderFilterTags() {
   if (filterTagsElement) {
     filterTagsElement.style.display = 'flex';
   }
+  if (filterActions) {
+    filterActions.style.display = 'inline-flex';
+  }
   filterTagsElement.innerHTML = '';
   
   // 先添加作者标签
   if (userAuthors && userAuthors.length > 0) {
     userAuthors.forEach(author => {
-      const tagElement = document.createElement('span');
+      const tagGroup = document.createElement('div');
+      tagGroup.className = 'filter-tag-group';
+
+      const tagElement = document.createElement('button');
+      tagElement.type = 'button';
       tagElement.className = `category-button author-button ${activeAuthors.includes(author) ? 'active' : ''}`;
       tagElement.textContent = author;
       tagElement.dataset.author = author;
-      tagElement.title = "匹配作者姓名";
+      tagElement.title = 'Click to toggle this author';
+      tagElement.setAttribute('aria-pressed', activeAuthors.includes(author));
       
       tagElement.addEventListener('click', () => {
         toggleAuthorFilter(author);
       });
       
-      filterTagsElement.appendChild(tagElement);
+      tagGroup.append(tagElement, createOnlyFilterButton(author, 'author'));
+      filterTagsElement.appendChild(tagGroup);
       
       // 添加出现动画后移除动画类
       if (!activeAuthors.includes(author)) {
@@ -111,17 +125,23 @@ function renderFilterTags() {
   // 再添加关键词标签
   if (userKeywords && userKeywords.length > 0) {
     userKeywords.forEach(keyword => {
-      const tagElement = document.createElement('span');
+      const tagGroup = document.createElement('div');
+      tagGroup.className = 'filter-tag-group';
+
+      const tagElement = document.createElement('button');
+      tagElement.type = 'button';
       tagElement.className = `category-button keyword-button ${activeKeywords.includes(keyword) ? 'active' : ''}`;
       tagElement.textContent = keyword;
       tagElement.dataset.keyword = keyword;
-      tagElement.title = "匹配标题和摘要中的关键词";
+      tagElement.title = 'Click to toggle this topic';
+      tagElement.setAttribute('aria-pressed', activeKeywords.includes(keyword));
       
       tagElement.addEventListener('click', () => {
         toggleKeywordFilter(keyword);
       });
       
-      filterTagsElement.appendChild(tagElement);
+      tagGroup.append(tagElement, createOnlyFilterButton(keyword, 'topic'));
+      filterTagsElement.appendChild(tagGroup);
       
       // 添加出现动画后移除动画类
       if (!activeKeywords.includes(keyword)) {
@@ -131,6 +151,58 @@ function renderFilterTags() {
         }, 300);
       }
     });
+  }
+
+  updateFilterActionStates();
+}
+
+function createOnlyFilterButton(value, type) {
+  const onlyButton = document.createElement('button');
+  onlyButton.type = 'button';
+  onlyButton.className = 'filter-only-button';
+  onlyButton.textContent = 'Only';
+  onlyButton.title = `Only select ${value}`;
+  onlyButton.setAttribute('aria-label', `Only select ${value}`);
+  onlyButton.addEventListener('click', () => {
+    selectOnlyFilter(value, type);
+  });
+  return onlyButton;
+}
+
+function updateFilterActionStates() {
+  const selectAllButton = document.getElementById('selectAllFilters');
+  const clearButton = document.getElementById('clearFilters');
+  const totalFilterCount = userAuthors.length + userKeywords.length;
+  const activeFilterCount = activeAuthors.length + activeKeywords.length;
+
+  if (selectAllButton) {
+    selectAllButton.disabled = totalFilterCount === 0 || activeFilterCount === totalFilterCount;
+  }
+  if (clearButton) {
+    clearButton.disabled = activeFilterCount === 0;
+  }
+}
+
+function setActiveFilters(authors, keywords) {
+  activeAuthors = [...authors];
+  activeKeywords = [...keywords];
+  renderFilterTags();
+  renderPapers();
+}
+
+function selectAllFilters() {
+  setActiveFilters(userAuthors, userKeywords);
+}
+
+function clearFilters() {
+  setActiveFilters([], []);
+}
+
+function selectOnlyFilter(value, type) {
+  if (type === 'author') {
+    setActiveFilters([value], []);
+  } else {
+    setActiveFilters([], [value]);
   }
 }
 
@@ -155,6 +227,7 @@ function toggleKeywordFilter(keyword) {
       
       // 添加/移除激活状态
       tag.classList.toggle('active', activeKeywords.includes(keyword));
+      tag.setAttribute('aria-pressed', activeKeywords.includes(keyword));
       
       // 添加高亮动画
       setTimeout(() => {
@@ -167,6 +240,7 @@ function toggleKeywordFilter(keyword) {
       }, 1000);
     }
   });
+  updateFilterActionStates();
   
   // 重新渲染论文列表
   renderPapers();
@@ -194,6 +268,7 @@ function toggleAuthorFilter(author) {
       
       // 添加/移除激活状态
       tag.classList.toggle('active', activeAuthors.includes(author));
+      tag.setAttribute('aria-pressed', activeAuthors.includes(author));
       
       // 添加高亮动画
       setTimeout(() => {
@@ -206,6 +281,7 @@ function toggleAuthorFilter(author) {
       }, 1000);
     }
   });
+  updateFilterActionStates();
   
   // 重新渲染论文列表
   renderPapers();
@@ -590,6 +666,15 @@ function initEventListeners() {
   const searchWrapper = document.querySelector('#textSearchContainer .search-input-wrapper');
   const searchInput = document.getElementById('textSearchInput');
   const searchClear = document.getElementById('textSearchClear');
+  const selectAllFiltersButton = document.getElementById('selectAllFilters');
+  const clearFiltersButton = document.getElementById('clearFilters');
+
+  if (selectAllFiltersButton) {
+    selectAllFiltersButton.addEventListener('click', selectAllFilters);
+  }
+  if (clearFiltersButton) {
+    clearFiltersButton.addEventListener('click', clearFilters);
+  }
 
   if (searchToggle && searchWrapper && searchInput && searchClear) {
     searchToggle.addEventListener('click', (e) => {

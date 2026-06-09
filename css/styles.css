@@ -377,6 +377,74 @@ header {
   overflow-y: hidden;
 }
 
+.filter-actions {
+  display: none;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 5px;
+  margin-right: 10px;
+  white-space: nowrap;
+}
+
+.filter-action-button {
+  padding: 3px 2px;
+  color: var(--primary-color);
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.filter-action-button:hover:not(:disabled) {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.filter-action-button:disabled {
+  color: var(--text-tertiary);
+  cursor: default;
+  opacity: 0.55;
+}
+
+.filter-action-separator {
+  color: var(--border-accent);
+  font-size: 12px;
+}
+
+.filter-tag-group {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
+.filter-tag-group .category-button {
+  margin-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.filter-only-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  margin: 0 2px 0 -1px;
+  border: 1px solid var(--border-accent);
+  border-left-color: rgba(255, 255, 255, 0.4);
+  border-radius: 0 16px 16px 0;
+  background-color: var(--background-hover);
+  color: var(--primary-color);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: var(--transition);
+}
+
+.filter-only-button:hover,
+.filter-only-button:focus-visible {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
 /* Text search UI */
 .text-search {
   display: inline-flex;
@@ -1266,6 +1334,27 @@ input:checked + .toggle-slider:before {
     max-width: 100%; /* 在移动端占满宽度 */
     justify-content: flex-start; /* 在移动端左对齐 */
     flex-wrap: nowrap; /* 确保不换行 */
+  }
+
+  .filter-label-container {
+    flex-wrap: wrap;
+  }
+
+  .filter-actions {
+    margin-right: 0;
+  }
+
+  .filter-scroll {
+    flex-basis: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: 4px;
+  }
+
+  .filter-only-button {
+    padding: 0 6px;
+    border-radius: 0 14px 14px 0;
+    font-size: 9px;
   }
   
   .category-button, .keyword-tag {
